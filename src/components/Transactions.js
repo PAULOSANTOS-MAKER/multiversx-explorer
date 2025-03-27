@@ -2,38 +2,45 @@ import React, { useEffect, useState } from 'react';
 import api from '../api';
 
 function Transactions({ blockHash }) {
-  const [blockData, setBlockData] = useState(null);
-  const [error, setError] = useState(null);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchBlock = async () => {
+    const fetchTransactions = async () => {
       try {
-        const res = await api.get(`/blocks/${blockHash}`);
-        setBlockData(res.data);
+        const res = await api.get(`/blocks/${blockHash}/transactions`);
+        setTransactions(res.data);
       } catch (err) {
-        setError('Erro ao buscar detalhes do bloco 😥');
+        setError('Erro ao buscar transações :(');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBlock();
+    fetchTransactions();
   }, [blockHash]);
 
-  if (loading) return <p>Carregando detalhes do bloco...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p className="text-orange-300">Carregando transações...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div style={{ textAlign: 'left', padding: '1rem' }}>
-      <h2>Detalhes do Bloco</h2>
-      <p><strong>Hash:</strong> {blockData.hash}</p>
-      <p><strong>Nonce:</strong> {blockData.nonce}</p>
-      <p><strong>Timestamp:</strong> {new Date(blockData.timestamp * 1000).toLocaleString()}</p>
-      <p><strong>Epoch:</strong> {blockData.epoch}</p>
-      <p><strong>Shard:</strong> {blockData.shard}</p>
-      <p><strong>Número de Transações:</strong> {blockData.numTxs}</p>
-      <p><strong>Proposer:</strong> {blockData.proposer}</p>
+    <div>
+      <h2 className="text-2xl font-bold text-orange-400 mb-4">📄 Transações do Bloco</h2>
+      <div className="space-y-4">
+        {transactions.map((tx) => (
+          <div
+            key={tx.txHash}
+            className="bg-zinc-950 border border-orange-600 p-4 rounded-lg shadow"
+          >
+            <p className="text-white text-sm mb-1">Hash: <span className="text-orange-300">{tx.txHash}</span></p>
+            <p className="text-orange-300 text-sm">De: {tx.sender}</p>
+            <p className="text-orange-300 text-sm">Para: {tx.receiver}</p>
+            <p className="text-sm text-zinc-400">Valor: {tx.value / 1e18} EGLD</p>
+            <p className="text-sm text-zinc-400">Taxa: {tx.fee / 1e18} EGLD</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
